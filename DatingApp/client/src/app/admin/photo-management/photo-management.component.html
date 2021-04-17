@@ -1,1 +1,27 @@
-<p>photo-management works!</p>
+<table class="table table-hover">
+    <tr>
+        <th>Awaiting photo</th>
+        <th></th>
+    </tr>
+    <tr *ngFor="let photo of photos">
+        <td><img style="max-height: 200px; text-align: center; vertical-align: middle;" src="{{photo.url}}"></td>
+        <td style="text-align: center; vertical-align: middle;">
+            <button class="btn btn-success" (click)='approve(photo)'>Approve</button>
+            <button class="btn btn-danger" (click)='delete(photo)'>Delete</button>
+        </td>
+    </tr>
+</table>
+<div class="d-flex justify-content-center" *ngIf="pagination">
+    <pagination
+      [boundaryLinks]="true"
+      [totalItems]="pagination.totalItems"
+      [itemsPerPage]="pagination.itemsPerPage"
+      [(ngModel)]="pagination.currentPage"
+      (pageChanged)="pageChanged($event)"
+      previousText="&lsaquo;"
+      nextText="&rsaquo;"
+      firstText="&laquo;"
+      lastText="&raquo;"
+    >
+    </pagination>
+  </div>

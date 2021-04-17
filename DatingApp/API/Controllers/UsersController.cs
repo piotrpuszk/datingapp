@@ -42,6 +42,10 @@ namespace API.Controllers
                 userParams.Gender = gender == "male" ? "female" : "male";
             }
             var users = await _unitOfWork.UserRepository.GetMembersAsync(userParams);
+            foreach (var user in users)
+            {
+                if(user.Username != User.GetUsername()) user.Photos = user.Photos?.ApprovedOnly();
+            }
             Response.AddPaginationHeader(users.CurrentPage, users.PageSize, 
             users.TotalCount, users.TotalPages);
             return Ok(users);
@@ -50,7 +54,17 @@ namespace API.Controllers
         [HttpGet("{username}", Name = "GetUser")]
         public async Task<ActionResult<MemberDto>> GetUser(string username)
         {
-            return await _unitOfWork.UserRepository.GetMemberAsync(username);
+            MemberDto result = null;
+            if(User.GetUsername() != username)
+            {
+                result = await _unitOfWork.UserRepository.GetMemberAsync(username);
+            }
+            else
+            {
+                result = await _unitOfWork.UserRepository.GetMyselfAsync(username);
+            }
+            if(User.GetUsername() != username) result.Photos = result.Photos?.ApprovedOnly();
+            return result;
         }
 
         [HttpPut]
@@ -74,10 +88,6 @@ namespace API.Controllers
                 Url = result.SecureUrl.AbsoluteUri,
                 PublicId = result.PublicId,
             };
-            if(user.Photos.Count == 0)
-            {
-                photo.IsMain = true;
-            }
             user.Photos.Add(photo);
             if(await _unitOfWork.Complete())
             {
@@ -92,6 +102,7 @@ namespace API.Controllers
             var user = await _unitOfWork.UserRepository.GetUserByUsernameAsync(User.GetUsername());
             var photo = user.Photos.FirstOrDefault(x => x.Id == photoId);
             if(photo.IsMain) return BadRequest("This is already your main photo");
+            if(!photo.IsApproved) return BadRequest("This is not approved yet");
             var currentMain = user.Photos.FirstOrDefault(x => x.IsMain);
             if(currentMain != null) currentMain.IsMain = false;
             photo.IsMain = true;
