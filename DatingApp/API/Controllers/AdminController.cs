@@ -84,7 +84,7 @@ namespace API.Controllers
             if (photo.IsApproved) return BadRequest("You cannot approve already approved photo");
             _unitOfWork.PhotoRepository.ApprovePhoto(photo);
             var user = await _unitOfWork.UserRepository.GetUserByPhotoId(photoId);
-            if(user.Photos.Count == 1)
+            if(user.Photos.FirstOrDefault(photo => photo.IsMain) == null)
             {
                 photo.IsMain = true;
             }
